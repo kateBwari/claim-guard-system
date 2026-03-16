@@ -1,0 +1,46 @@
+server:
+  port: 8085
+
+spring:
+  application:
+    name: api-gateway-service
+  main:
+    web-application-type: reactive
+  cloud:
+    config:
+      uri: http://localhost:8888
+    gateway:
+      discovery:
+        locator:
+          enabled: false
+          lower-case-service-id: false
+      routes:
+        - id: user-service
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/user/**
+        - id: claims-service
+          uri: lb://claim-service
+          predicates:
+            - Path=/api/claims/**
+        # I added the admin route here so your AdminController works too
+        - id: admin-service
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/admin/**
+        - id: policy-service
+          uri: lb://CLAIM-SERVICE
+          predicates:
+            - Path=/api/policies/**
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+logging:
+  level:
+    org:
+      springframework:
+        cloud:
+          gateway: TRACE
