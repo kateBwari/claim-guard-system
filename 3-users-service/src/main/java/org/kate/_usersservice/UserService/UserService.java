@@ -17,86 +17,103 @@ public class UserService {
 
     @Autowired
     private UserCredentialRepository repository;
-    @Autowired
-    private JwtService jwtService;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+    @Autowired
+    private JwtService jwtService;
 
-    public ApiResponse saveUser(@Valid UserDTO userDTO) {
-        // 1. Check for duplicates BEFORE saving
+    // 1. REGISTRATION: Create a new user
+    public ApiResponse<UserCredential> saveUser(@Valid UserDTO userDTO) {
         if (repository.existsByUsername(userDTO.getUsername())) {
-            return new ApiResponse(false, "User is already registered!", null);
+            return new ApiResponse<>(false, "Username is already taken!", null);
         }
         if (repository.existsByEmail(userDTO.getEmail())) {
-            return new ApiResponse(false, "Email is already in use!", null);
+            return new ApiResponse<>(false, "Email is already in use!", null);
         }
 
-        // 2. Map DTO to Entity
         UserCredential user = new UserCredential();
         user.setUsername(userDTO.getUsername());
         user.setEmail(userDTO.getEmail());
+        user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
 
-        // 3. Encrypt the password (Mandatory check)
-        if (userDTO.getPassword() != null && !userDTO.getPassword().isEmpty()) {
-            user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
-        } else {
-            return new ApiResponse(false, "Password is required", null);
-        }
+        // Default to ROLE_USER if not specified
+        String role = (userDTO.getRole() != null) ? userDTO.getRole().toUpperCase() : "ROLE_USER";
+        if (!role.startsWith("ROLE_")) role = "ROLE_" + role;
+        user.setRole(role);
 
-        // 4. Set Role (Use DTO role if present, otherwise default to ROLE_USER)
-        String rawRole = (userDTO.getRole() != null) ? userDTO.getRole() : "USER";
-        String formattedRole = rawRole.toUpperCase();
-        if (!formattedRole.startsWith("ROLE_")) {
-            formattedRole = "ROLE_" + formattedRole;
-        }
-        user.setRole(formattedRole);
-
-        // 5. Save the Entity
         UserCredential savedUser = repository.save(user);
-
-        // 6. Return the response (Note: we return savedUser, not repository.save again)
-        return new ApiResponse(true, "User registered successfully!", savedUser);
+        return new ApiResponse<>(true, "User registered successfully!", savedUser);
     }
 
-    // Required for AdminController to list users
-    public List<UserCredential> findAllUsers() {
-        return repository.findAll();
-    }
-
-    // Fixed delete method using Long to match JpaRepository
-    public void deleteUserById(Long id) {
-        if (!repository.existsById(id)) {
-            throw new RuntimeException("User not found with id: " + id);
-        }
-        repository.deleteById(id);
-    }
-
-    // The new method for AdminController
-    public UserCredential updateUserRole(Long id, String newRole) {
-        // 1. Find the user first
+    // 2. ADMIN: Update a user's role
+    public UserDTO updateUserRole(Long id, UserDTO userDetails) {
         UserCredential user = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
 
-        // 2. Format the role (ensures it starts with ROLE_)
-        String formattedRole = newRole.toUpperCase();
-        if (!formattedRole.startsWith("ROLE_")) {
-            formattedRole = "ROLE_" + formattedRole;
+        if (userDetails.getRole() != null) {
+            String role = userDetails.getRole().toUpperCase();
+            if (!role.startsWith("ROLE_")) role = "ROLE_" + role;
+            user.setRole(role);
         }
 
-        // 3. Save and return
-        user.setRole(formattedRole);
-        return repository.save(user);
+        UserCredential updated = repository.save(user);
+        return mapToDTO(updated);
     }
 
-    public String generateToken(@NotBlank(message = "Username cannot be empty") @Size(min = 3, message = "Username must be at least 3 characters long") String username) {
-        // 1. Check if the user exists in the database
+    // 3. USER: Update own profile (Email, etc.)
+    public UserDTO updateUserProfile(String currentUsername, UserDTO profileUpdate) {
+        UserCredential user = repository.findByUsername(currentUsername)
+                .orElseThrow(() -> new RuntimeException("User not found: " + currentUsername));
+
+        if (profileUpdate.getEmail() != null) {
+            user.setEmail(profileUpdate.getEmail());
+        }
+
+        UserCredential saved = repository.save(user);
+        return mapToDTO(saved);
+    }
+    // Helper: Find all users for the Admin panel
+    public List<UserCredential> findAllUsers() {
+        return repository.findAll();
+    }
+    private UserDTO mapToDTO(UserCredential user) {
+        UserDTO dto = new UserDTO();
+        dto.setId(user.getId());
+        dto.setUsername(user.getUsername());
+        dto.setEmail(user.getEmail());
+        dto.setRole(user.getRole());
+        // Password is never mapped to DTO for security
+        return dto;
+    }
+    public String getUsernameById(Long id) {
+            // 1. Attempt to find the user in the repository
+            return repository.findById(id)
+                    .map(UserCredential::getUsername) // Extract just the username if found
+                    .orElse("User Not Found");        // Return a clear message if not found
+    }
+    public String generateToken(@NotBlank String username) {
+        // 1. You named this variable 'user'
         UserCredential user = repository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
 
-        // 2. Call your JWT service to create the token
-        // Assuming you have a JwtService injected as 'jwtService'
+        // 2. So you must use 'user.getId()', not 'savedUser.getId()'
         return jwtService.generateToken(user);
     }
-}
+
+    public UserDTO deleteUserById(Long id) {
+            // 1. Fetch the user first (crucial for getting the username)
+            UserCredential user = repository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+
+            // 2. Map to DTO before deleting from the database
+            UserDTO deletedInfo = mapToDTO(user);
+
+            // 3. Delete the user
+            repository.delete(user);
+
+            // 4. Return the data to the controller
+            return deletedInfo;
+        }}
+
 

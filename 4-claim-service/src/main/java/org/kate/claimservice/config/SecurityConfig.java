@@ -49,4 +49,5 @@ import javax.crypto.spec.SecretKeySpec;
         // Make sure you use 'decodedKey' here, NOT 'keyBytes'
         SecretKeySpec secretKey = new SecretKeySpec(decodedKey, "HmacSHA256");
         return NimbusJwtDecoder.withSecretKey(secretKey).build();
-    }}
+    }
+}

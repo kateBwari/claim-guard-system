@@ -49,4 +49,24 @@ public class UserController {
                     .body(new ApiResponse(false, "Invalid credentials", null));
         }
     }
+    @GetMapping("/{id}/username")
+    public String getUsername(@PathVariable Long id) {
+        return userService.getUsernameById(id);
+    }
+    @PutMapping("/update-profile")
+    public ResponseEntity<ApiResponse<UserDTO>> updateProfile(
+            @RequestBody UserDTO profileUpdate,
+            Authentication authentication // This gets the logged-in user's info from JWT
+    ) {
+        // We get the username from the token so they can only update THEIR own account
+        String currentUsername = authentication.getName();
+
+        UserDTO updatedProfile = userService.updateUserProfile(currentUsername, profileUpdate);
+
+        return ResponseEntity.ok(new ApiResponse<>(
+                true,
+                "Profile updated successfully",
+                updatedProfile
+        ));
+    }
 }

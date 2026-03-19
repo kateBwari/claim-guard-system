@@ -8,5 +8,6 @@ import java.util.List;
 
 @Repository
 public interface ClaimRepository extends JpaRepository<Claim, Long> {
+    boolean existsByPolicyNumberAndDescription(String policyNumber, String description);
     List<Claim> findByUserId(Long userId);
 }

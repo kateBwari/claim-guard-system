@@ -1,7 +1,9 @@
 package org.kate._usersservice.controller;
 
+import org.kate._usersservice.model.ApiResponse;
 import org.kate._usersservice.model.UserCredential;
 import org.kate._usersservice.UserService.UserService;
+import org.kate._usersservice.model.UserDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -22,16 +24,21 @@ public class AdminController {
         return ResponseEntity.ok(service.findAllUsers());
     }
 
-    // Delete a user by ID
     @DeleteMapping("/delete-user/{id}")
-    public ResponseEntity<String> deleteUser(@PathVariable Long id) {
-        service.deleteUserById(id);
-        return ResponseEntity.ok("User deleted successfully by admin.");
-    }
+    public ResponseEntity<ApiResponse<Object>> deleteUser(@PathVariable Long id) {
+        // 1. (Optional) Get user info first if you want it in the response
+        // var user = service.getUserById(id);
 
-    // Update user roles or status
-    @PutMapping("/update-role/{id}")
-    public ResponseEntity<UserCredential> updateRole(@PathVariable Long id, @RequestBody String newRole) {
-        return ResponseEntity.ok(service.updateUserRole(id, newRole));
+        UserDTO deletedUser = service.deleteUserById(id);
+
+        // 2. Create the response without the gray labels
+        ApiResponse<Object> response = new ApiResponse<>(
+                true,
+                "User with ID " + id + " deleted successfully by admin",
+                deletedUser // Or pass the 'user' object here if you fetched it
+        );
+
+        return ResponseEntity.ok(response);
+
     }
 }

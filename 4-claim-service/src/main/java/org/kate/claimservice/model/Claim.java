@@ -10,6 +10,7 @@ import lombok.*; // Using specific annotations is safer for JPA
 @AllArgsConstructor
 @Table(name = "claims")
 public class Claim {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -30,4 +31,5 @@ public class Claim {
 
     @Column(name = "user_id")
     private Long userId;
+    private String username;
 }
