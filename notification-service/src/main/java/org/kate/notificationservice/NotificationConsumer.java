@@ -11,6 +11,6 @@ public class NotificationConsumer {
 
     @RabbitListener(queues = "notification_queue")
     public void listen(Map<String, Object> message) { // Change String to Map
-        System.out.println("Received message: " + message);
+        System.out.println(" [✓] RECEIVED: Notification Service caught the message -> " + message);
     }
 }

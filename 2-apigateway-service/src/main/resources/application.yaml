@@ -23,6 +23,11 @@ spring:
           uri: lb://claim-service
           predicates:
             - Path=/api/claims/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: claimServiceCircuit
+                fallbackUri: forward:/fallback/claims
         # I added the admin route here so your AdminController works too
         - id: admin-service
           uri: lb://USER-SERVICE

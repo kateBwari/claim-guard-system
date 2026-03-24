@@ -2,6 +2,7 @@ package org.kate._apigatewayservice.service;
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.extern.slf4j.Slf4j;
+import org.kate._apigatewayservice.dto.ClaimDto;
 import org.kate._apigatewayservice.model.ApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,9 +24,9 @@ public class ClaimServiceClient {
                 .retrieve()
                 .bodyToMono(ApiResponse.class);
     }
-    public Mono<ApiResponse> fallbackForClaimService(Long id, Throwable t) {
-        String errorMessage = "Claim Service is currently unavailable for Claim ID: " + id;
+    public Mono<ApiResponse> fallbackForClaimService(ClaimDto dto, Throwable t) {
+        String errorMessage = "Claim Service is currently unavailable for Claim ID: " + dto.getId();
         log.info("FALLBACK METHOD : {}",t.getMessage());
-        return Mono.just(new ApiResponse(false, errorMessage, t.getMessage()));
+        return Mono.just(new ApiResponse(false, "System busy, claim not created", null));
     }
 }

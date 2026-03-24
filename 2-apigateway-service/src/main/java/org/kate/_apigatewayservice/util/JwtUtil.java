@@ -20,4 +20,12 @@ public class JwtUtil {
         byte[] keyBytes = Decoders.BASE64.decode(SECRET);
         return Keys.hmacShaKeyFor(keyBytes);
     }
+    public String getUserIdFromToken(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(getSignKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .getSubject(); // This gets the 'sub' field from your JWT
+    }
 }
