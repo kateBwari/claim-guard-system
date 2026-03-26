@@ -18,18 +18,21 @@ public class Claim {
     @Column(nullable = false, unique = true)
     private String claimNumber;
 
+    @Column(unique = true, nullable = false)
+    private String userIdentificationNumber;
+
+
     @Column(columnDefinition = "TEXT")
     private String description;
 
+
     @Column(nullable = false)
-    private Double amount;
+    private String benefitType; // e.g., "Death Benefit", "Accident Coverage"
 
     private String status;
 
     @Column(nullable = false)
     private String policyNumber;
 
-    @Column(name = "user_id")
-    private Long userId;
-    private String username;
+
 }

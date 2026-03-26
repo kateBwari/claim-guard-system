@@ -9,6 +9,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ClaimCreatedEvent {
     private Long Id;
-    private Long userId;
+    private String userIdentificationNumber;
     private String policyNumber;
 }

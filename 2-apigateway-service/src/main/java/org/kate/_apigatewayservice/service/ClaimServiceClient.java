@@ -17,10 +17,10 @@ public class ClaimServiceClient {
     private WebClient.Builder webClientBuilder;
 
     @CircuitBreaker(name = "claimServiceCircuit", fallbackMethod = "fallbackForClaimService")
-    public Mono<ApiResponse> getClaimDetails(Long id) {
+    public Mono<ApiResponse> getClaimDetails(ClaimDto dto) {
         return webClientBuilder.build()
                 .get()
-                .uri("http://claim-service/claims/" + id)
+                .uri("http://claim-service/claims/" + dto.getId())
                 .retrieve()
                 .bodyToMono(ApiResponse.class);
     }

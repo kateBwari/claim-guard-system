@@ -14,16 +14,17 @@ public class ClaimDTO {
 
     private String claimNumber;
 
+    @NotBlank(message = "Identification number is required")
+    private String userIdentificationNumber;
+
     @NotBlank(message = "Description cannot be empty")
     private String description;
 
-    @NotNull(message = "Amount is required")
-    @Positive(message = "Amount must be greater than zero")
-    private Double amount;
+    @NotBlank(message = "Benefit type is required")
+    private String benefitType;
+
 
     private String status;
-
-    private Long userId;
 
     @NotBlank(message = "Policy number is required")
     private String policyNumber;

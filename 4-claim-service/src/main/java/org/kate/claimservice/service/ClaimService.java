@@ -16,6 +16,9 @@ public class ClaimService {
 
     @Autowired
     private ClaimRepository claimRepository;
+    public ClaimService(ClaimRepository repository) {
+        this.claimRepository = repository;
+    }
 
     @Autowired
     private PolicyRepository policyRepository;
@@ -30,9 +33,10 @@ public class ClaimService {
 
         // 2. Map the DTO data to a new Claim Entity
         Claim claim = new Claim();
-        claim.setAmount(claimDto.getAmount());
+        claim.setBenefitType(claimDto.getBenefitType());
         claim.setDescription(claimDto.getDescription());
         claim.setPolicyNumber(claimDto.getPolicyNumber());
+        claim.setUserIdentificationNumber(claimDto.getUserIdentificationNumber());
         claim.setStatus("PENDING"); // Default status for new claims
 
         // 3. Save and return the claim
@@ -46,7 +50,7 @@ public class ClaimService {
             // 2. Create the Event
             ClaimCreatedEvent event = new ClaimCreatedEvent(
                     savedClaim.getId(),
-                    savedClaim.getUserId(),
+                    savedClaim.getUserIdentificationNumber(),
                     savedClaim.getPolicyNumber()
             );
 
@@ -59,4 +63,20 @@ public class ClaimService {
 
             return savedClaim;
         }
+        public ClaimDTO deleteClaim(Long id) {
+        // 1. Find the claim or throw an error if it doesn't exist
+        Claim claim = claimRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Claim not found with id: " + id));
+
+        // 2. Map the Entity to a DTO (assuming you have a mapper or manual conversion)
+        ClaimDTO claimDto = new ClaimDTO();
+        claimDto.setId(claim.getId());
+        // ... map other fields like claimNumber, status, etc.
+
+        // 3. Delete from the database
+        claimRepository.delete(claim);
+
+        // 4. Return the DTO
+        return claimDto;
     }
+}

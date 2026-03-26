@@ -19,17 +19,18 @@ public class Policy {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Policy number is required")
-    @Size(min = 5, message = "Policy number must be at least 5 characters")
-    @Column(unique = true)
+    @Column(unique = true, nullable = false)
     private String policyNumber;
 
-    @NotBlank(message = "Policy type is required (e.g., LIFE, HEALTH)")
+    @Column(nullable = false)
+    private String userIdentificationNumber;
+
+    @Column(nullable = false)
     private String policyCategory;
 
-    @Positive(message = "Coverage amount must be greater than zero")
-    private double coverageAmount;
+    @Column(nullable = false)
+    private double premium;
 
-    @Future(message = "Expiry date must be in the future")
+    @Column(nullable = false)
     private LocalDate expiryDate;
 }

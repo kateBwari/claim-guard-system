@@ -13,15 +13,16 @@ public class PolicyDTO {
 
     private Long id;
 
-    @NotBlank(message = "Policy number cannot be blank")
-    @Size(min = 5, message = "Policy number must be at least 5 characters")
     private String policyNumber;
+    @NotBlank(message = "userIdentificationNumber is required")
+    @Size(min = 5, message = "Identification number must be at least 5 characters")
+    private String userIdentificationNumber;
 
     @NotBlank(message = "Please specify the policy type")
     private String policyCategory;
 
-    @Positive(message = "Coverage amount must be a positive value")
-    private Double coverageAmount;
+    @Positive(message = "Premium amount must be a positive value")
+    private Double premium;
 
     @NotBlank(message = "Expiry date is required")
     @Pattern(regexp = "^\\d{2}/\\d{2}/\\d{4}$", message = "Use format DD/MM/YYYY")

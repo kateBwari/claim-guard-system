@@ -46,6 +46,9 @@ public class UserCredential  implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(unique = true, nullable = false)
+    private String userIdentificationNumber;
+
     @NotBlank(message = "Username cannot be empty")
     @Size(min = 3, message = "Username must be at least 3 characters long")
     @Column(unique = true)

@@ -11,5 +11,6 @@ public interface UserCredentialRepository extends JpaRepository<UserCredential, 
     boolean existsByUsername(String username);
 
     boolean existsByEmail(String email);
+    boolean existsByUserIdentificationNumber(String userIdentificationNumber);
 
 }

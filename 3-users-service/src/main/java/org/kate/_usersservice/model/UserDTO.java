@@ -26,6 +26,9 @@ public class UserDTO {
     @NotBlank(message = "Username cannot be empty")
     @Size(min = 3, message = "Username must be at least 3 characters long")
     private String username;
+    @NotBlank(message = "Identification number is required")
+    @Size(min = 5, message = "Identification number should be at least five numbers")
+    private String userIdentificationNumber;
 
     @Email(message = "Please provide a valid email")
     @NotBlank(message = "Email is required")

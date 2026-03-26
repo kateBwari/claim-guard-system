@@ -7,6 +7,7 @@ import org.kate._usersservice.model.ApiResponse;
 import org.kate._usersservice.model.UserDTO;
 import org.kate._usersservice.model.UserCredential;
 import org.kate._usersservice.repository.UserCredentialRepository;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,9 @@ public class UserService {
     private PasswordEncoder passwordEncoder;
     @Autowired
     private JwtService jwtService;
+    @Autowired
+    private ClaimClient claimClient;
+
 
     // 1. REGISTRATION: Create a new user
     public ApiResponse<UserCredential> saveUser(@Valid UserDTO userDTO) {
@@ -31,9 +35,12 @@ public class UserService {
         if (repository.existsByEmail(userDTO.getEmail())) {
             return new ApiResponse<>(false, "Email is already in use!", null);
         }
-
+        if (repository.existsByUserIdentificationNumber(userDTO.getUserIdentificationNumber())) {
+            return new ApiResponse(false, "This identification number is already in use", null);
+        }
         UserCredential user = new UserCredential();
         user.setUsername(userDTO.getUsername());
+        user.setUserIdentificationNumber(userDTO.getUserIdentificationNumber());
         user.setEmail(userDTO.getEmail());
         user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
 
@@ -81,6 +88,7 @@ public class UserService {
         UserDTO dto = new UserDTO();
         dto.setId(user.getId());
         dto.setUsername(user.getUsername());
+        dto.setUserIdentificationNumber(user.getUserIdentificationNumber());
         dto.setEmail(user.getEmail());
         dto.setRole(user.getRole());
         // Password is never mapped to DTO for security
@@ -100,20 +108,17 @@ public class UserService {
         // 2. So you must use 'user.getId()', not 'savedUser.getId()'
         return jwtService.generateToken(user);
     }
-
     public UserDTO deleteUserById(Long id) {
-            // 1. Fetch the user first (crucial for getting the username)
-            UserCredential user = repository.findById(id)
-                    .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+        // 1. Fetch the user safely or throw an error if they don't exist
+        UserCredential user = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
 
-            // 2. Map to DTO before deleting from the database
-            UserDTO deletedInfo = mapToDTO(user);
+        // 2. Call the Claim Service via Feign to delete all associated claims
+        claimClient.deleteClaimsByUserId(user.getUserIdentificationNumber());
 
-            // 3. Delete the user
-            repository.delete(user);
+        // 3. Delete the user from the local User database
+        repository.delete(user);
 
-            // 4. Return the data to the controller
-            return deletedInfo;
-        }}
-
-
+        // 4. Return the data to the controller
+        return mapToDTO(user);
+    }}
