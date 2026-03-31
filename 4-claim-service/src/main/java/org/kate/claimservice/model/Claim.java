@@ -2,6 +2,10 @@ package org.kate.claimservice.model;
 
 import jakarta.persistence.*;
 import lombok.*; // Using specific annotations is safer for JPA
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -18,7 +22,7 @@ public class Claim {
     @Column(nullable = false, unique = true)
     private String claimNumber;
 
-    @Column(unique = true, nullable = false)
+    @Column(nullable = false, unique =true)
     private String userIdentificationNumber;
 
 
@@ -33,6 +37,21 @@ public class Claim {
 
     @Column(nullable = false)
     private String policyNumber;
+    @CreatedDate
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 
+    @LastModifiedDate
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
+    @PrePersist
+    public void prePersist(){
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
 
+    @PreUpdate
+    public void preUpdate(){
+        updatedAt = LocalDateTime.now();
+    }
 }

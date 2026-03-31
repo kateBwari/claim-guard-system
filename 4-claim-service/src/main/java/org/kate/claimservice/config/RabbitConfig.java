@@ -15,6 +15,8 @@ public class RabbitConfig {
     public static final String QUEUE = "notification_queue";
     public static final String ROUTING_KEY = "claim_routing_key";
 
+    public static final String USER_DELETE_EXCHANGE = "user.deletion.exchange";
+    public static final String USER_DELETE_QUEUE = "user.deletion.queue";
     @Bean
     public TopicExchange exchange() {
         return new TopicExchange(EXCHANGE);
@@ -29,9 +31,22 @@ public class RabbitConfig {
     public Binding binding(Queue queue, TopicExchange exchange) {
         return BindingBuilder.bind(queue).to(exchange).with(ROUTING_KEY);
     }
-
-    @Bean
-    public Jackson2JsonMessageConverter converter() {
-        return new Jackson2JsonMessageConverter();
-    }
+@Bean
+public TopicExchange userDeleteExchange() {
+    return new TopicExchange(USER_DELETE_EXCHANGE);
 }
+
+@Bean
+public Queue userDeleteQueue() {
+    return new Queue(RabbitConfig.USER_DELETE_QUEUE, true);
+}
+
+@Bean
+public Binding userDeleteBinding(Queue userDeleteQueue, TopicExchange userDeleteExchange) {
+    // Using an empty string "" as the routing key so it catches all deletion messages
+    return BindingBuilder.bind(userDeleteQueue).to(userDeleteExchange).with("");
+}
+@Bean
+public Jackson2JsonMessageConverter converter() {
+    return new Jackson2JsonMessageConverter();
+}}

@@ -2,15 +2,19 @@ package org.kate._usersservice.UserService; // Fixed package path
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import org.kate._usersservice.exception.ResourceNotFoundException;
 import org.kate._usersservice.model.ApiResponse;
 import org.kate._usersservice.model.UserDTO;
 import org.kate._usersservice.model.UserCredential;
 import org.kate._usersservice.repository.UserCredentialRepository;
+import org.springframework.amqp.rabbit.core.RabbitMessageOperations;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.util.List;
 
 @Service
@@ -25,6 +29,8 @@ public class UserService {
     private JwtService jwtService;
     @Autowired
     private ClaimClient claimClient;
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
 
 
     // 1. REGISTRATION: Create a new user
@@ -108,17 +114,25 @@ public class UserService {
         // 2. So you must use 'user.getId()', not 'savedUser.getId()'
         return jwtService.generateToken(user);
     }
-    public UserDTO deleteUserById(Long id) {
-        // 1. Fetch the user safely or throw an error if they don't exist
-        UserCredential user = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+    @Transactional
+    public UserDTO deleteByuserIdentificationNumber(String userIdentificationNumber) {
+        // 1. Find the user first to make sure they exist
+        UserCredential user = repository.findByuserIdentificationNumber(userIdentificationNumber)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + userIdentificationNumber));
 
-        // 2. Call the Claim Service via Feign to delete all associated claims
-        claimClient.deleteClaimsByUserId(user.getUserIdentificationNumber());
+        // 2. Map to DTO before deleting so you can return the info
+        UserDTO userDto = new UserDTO();
+        userDto.setId(user.getId());
+        userDto.setUsername(user.getUsername());
+        userDto.setUserIdentificationNumber(user.getUserIdentificationNumber());
+        userDto.setEmail(user.getEmail());
+        userDto.setRole(user.getRole());
+// Set any other fields you need here
 
-        // 3. Delete the user from the local User database
-        repository.delete(user);
-
-        // 4. Return the data to the controller
-        return mapToDTO(user);
-    }}
+        // 3. Delete from database
+        repository.deleteByuserIdentificationNumber((userIdentificationNumber));
+        rabbitTemplate.convertAndSend("user.deletion.exchange", "", userIdentificationNumber);
+        System.out.println("Message sent to Rabbitmq");
+        return userDto;
+    }
+}

@@ -24,6 +24,7 @@ public class JwtService {
     public String generateToken(UserCredential user) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("role", user.getRole());
+        claims.put("idNumber", user.getUserIdentificationNumber());
         return createToken(claims, user.getUsername());
     }
 
@@ -35,7 +36,6 @@ public class JwtService {
                 .setClaims(claims)
                 .setSubject(userName)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                // Set expiration for 24 hours
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 30))
                 .signWith(getSignKey(), SignatureAlgorithm.HS256)
                 .compact();

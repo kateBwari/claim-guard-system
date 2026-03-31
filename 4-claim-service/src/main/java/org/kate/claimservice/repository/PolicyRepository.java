@@ -11,9 +11,14 @@ import java.util.Optional;
 
 @Repository
 public interface PolicyRepository extends JpaRepository<Policy, Long> {
+    boolean existsByUserIdentificationNumberAndPolicyCategory(String userId, String category);
 
     // ADD THIS LINE: It tells Spring to generate the SQL check for the policy number
     boolean existsByPolicyNumber(String policyNumber);
 
     Optional<Policy> findByPolicyNumber(String policyNumber);
+
+    Page<Policy> findByUserIdentificationNumber(String userIdentificationNumber, Pageable pageable);
+
+    Page<Policy> findByPolicyCategory(String policyCategory, Pageable pageable);
 }

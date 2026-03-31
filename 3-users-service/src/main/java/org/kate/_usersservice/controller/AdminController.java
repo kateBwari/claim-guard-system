@@ -24,17 +24,17 @@ public class AdminController {
         return ResponseEntity.ok(service.findAllUsers());
     }
 
-    @DeleteMapping("/delete-user/{id}")
-    public ResponseEntity<ApiResponse<Object>> deleteUser(@PathVariable Long id) {
+    @DeleteMapping("/delete-user/{userIdentificationNumber}")
+    public ResponseEntity<ApiResponse<Object>> deleteUser(@PathVariable String userIdentificationNumber) {
         // 1. (Optional) Get user info first if you want it in the response
         // var user = service.getUserById(id);
 
-        UserDTO deletedUser = service.deleteUserById(id);
+        UserDTO deletedUser = service.deleteByuserIdentificationNumber(userIdentificationNumber);
 
         // 2. Create the response without the gray labels
         ApiResponse<Object> response = new ApiResponse<>(
                 true,
-                "User with ID " + id + " deleted successfully by admin",
+                "User with ID " + userIdentificationNumber + " deleted successfully by admin",
                 deletedUser // Or pass the 'user' object here if you fetched it
         );
 
