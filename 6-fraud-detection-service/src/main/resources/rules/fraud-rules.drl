@@ -1,0 +1,31 @@
+package rules;
+
+// IMPORTANT: Change this to the exact package where your ClaimRequest class lives
+import org.kate.frauddetectionservice.model.ClaimRequest;
+
+rule "Flag High Value Claims"
+    when
+        // If the claim amount is over 500,000, mark it for manual review
+        $claim : ClaimRequest(amount > 500000)
+    then
+        $claim.setFraudStatus("FLAGGED");
+        $claim.setReason("High value claim requires senior manager approval");
+end
+
+rule "Flag Recent Policy Claims"
+    when
+        // If a claim is made within 30 days of the policy start date
+        $claim : ClaimRequest(policyAgeInDays < 30 && amount > 50000)
+    then
+        $claim.setFraudStatus("FLAGGED");
+        $claim.setReason("Suspiciously early claim on new policy");
+end
+
+rule "Flag Double Claim Patterns"
+    when
+        // Logic to check if the same incident was already reported
+        $claim : ClaimRequest(isDuplicateIncident == true)
+    then
+        $claim.setFraudStatus("REJECTED");
+        $claim.setReason("Potential double-claiming detected");
+end
